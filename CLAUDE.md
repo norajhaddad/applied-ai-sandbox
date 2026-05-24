@@ -46,3 +46,11 @@ pytest tests/test_task_01.py
 - Run `pytest` after each substantive change.
 - If Claude proposes editing a test to "make it pass," push back. The
   tests are the spec.
+
+## Auth
+
+- Use `Flask-Login` + `werkzeug.security` for password hashing; never roll a
+  custom auth flow and never store plaintext passwords.
+- Don't add auth unless a task asks for it. If you do, gate the routes the
+  task names — a login that protects nothing isn't finished.
+- Password reset and email verification are out of scope for now.

@@ -25,11 +25,11 @@
   {% if notes %}
     {% for note in notes %}
       <div class="note">
-        <h3>{{ note.title }}{% if note.pinned %} <span class="pin-badge">📌 Pinned</span>{% endif %}</h3>
+        <h3>{{ note.title }}{% if note.pinned %} <span class="pin-badge"><span aria-hidden="true">📌</span> Pinned</span>{% endif %}</h3>
         <p>{{ note.body }}</p>
         {% if note.id is defined %}
         <form method="POST" action="{{ url_for('pin_note', note_id=note.id) }}">
-          <button type="submit">{% if note.pinned %}Unpin{% else %}Pin{% endif %}</button>
+          <button type="submit" aria-pressed="{{ 'true' if note.pinned else 'false' }}">{% if note.pinned %}Unpin{% else %}Pin{% endif %}</button>
         </form>
         {% endif %}
       </div>

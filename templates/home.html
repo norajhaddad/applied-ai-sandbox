@@ -10,6 +10,9 @@
     .note { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; }
     .note h3 { margin: 0 0 0.5rem; }
     a.btn { display: inline-block; background: #1a2540; color: #fff; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; }
+    .pin-badge { font-size: 0.75rem; font-weight: 600; color: #1a2540; }
+    .note form { margin-top: 0.5rem; }
+    .note button { background: #eef; border: 1px solid #ccd; color: #1a2540; padding: 0.25rem 0.6rem; border-radius: 6px; font: inherit; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -22,8 +25,13 @@
   {% if notes %}
     {% for note in notes %}
       <div class="note">
-        <h3>{{ note.title }}</h3>
+        <h3>{{ note.title }}{% if note.pinned %} <span class="pin-badge"><span aria-hidden="true">📌</span> Pinned</span>{% endif %}</h3>
         <p>{{ note.body }}</p>
+        {% if note.id is defined %}
+        <form method="POST" action="{{ url_for('pin_note', note_id=note.id) }}">
+          <button type="submit" aria-pressed="{{ 'true' if note.pinned else 'false' }}">{% if note.pinned %}Unpin{% else %}Pin{% endif %}</button>
+        </form>
+        {% endif %}
       </div>
     {% endfor %}
   {% else %}

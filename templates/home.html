@@ -23,13 +23,15 @@
 
   <h2 style="margin-top: 2rem;">Your notes ({{ notes|length }})</h2>
   {% if notes %}
-    {% for idx, note in notes %}
+    {% for note in notes %}
       <div class="note">
         <h3>{{ note.title }}{% if note.pinned %} <span class="pin-badge">📌 Pinned</span>{% endif %}</h3>
         <p>{{ note.body }}</p>
-        <form method="POST" action="{{ url_for('pin_note', idx=idx) }}">
+        {% if note.id is defined %}
+        <form method="POST" action="{{ url_for('pin_note', note_id=note.id) }}">
           <button type="submit">{% if note.pinned %}Unpin{% else %}Pin{% endif %}</button>
         </form>
+        {% endif %}
       </div>
     {% endfor %}
   {% else %}

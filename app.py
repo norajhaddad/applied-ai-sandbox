@@ -15,15 +15,18 @@ def create_app() -> Flask:
     # In-memory store for the sandbox. Resets on every restart, which is
     # fine for practice. Real apps use a database.
     app.notes: list[dict] = []  # type: ignore[attr-defined]
+    # Monotonic id for stable note identity. List indices shift when notes are
+    # added or removed (e.g. once TASK 02's delete lands), so routes address a
+    # note by this id, never by its position in the list.
+    app.next_note_id = 0  # type: ignore[attr-defined]
 
     @app.route("/")
     def home():
-        # Pinned notes float to the top. Sort a view (never mutate app.notes)
-        # and carry each note's original index so the pin button targets the
-        # right note even after the list is reordered for display.
+        # Pinned notes float to the top; a stable sort keeps insertion order
+        # within each group. Sort a view for display — never mutate app.notes.
+        # Each note carries its own id, so the pin button addresses it by id.
         notes_pinned_first = sorted(
-            enumerate(app.notes),
-            key=lambda pair: not pair[1].get("pinned", False),
+            app.notes, key=lambda note: not note.get("pinned", False)
         )
         return render_template("home.html", notes=notes_pinned_first)
 
@@ -33,18 +36,28 @@ def create_app() -> Flask:
             title = (request.form.get("title") or "").strip()
             body = (request.form.get("body") or "").strip()
             # TASK 01 will add validation here.
-            app.notes.append({"title": title, "body": body, "pinned": False})
+            app.notes.append(
+                {
+                    "id": app.next_note_id,
+                    "title": title,
+                    "body": body,
+                    "pinned": False,
+                }
+            )
+            app.next_note_id += 1
             return redirect(url_for("home"))
         return render_template("new_note.html")
 
-    @app.route("/notes/<int:idx>/pin", methods=["POST"])
-    def pin_note(idx: int):
-        """Toggle the pinned flag on the note at idx; pinning it again unpins it."""
-        # Read with .get so a note missing the key (created before this feature)
-        # is treated as unpinned.
-        if idx < 0 or idx >= len(app.notes):
+    @app.route("/notes/<int:note_id>/pin", methods=["POST"])
+    def pin_note(note_id: int):
+        """Toggle the pinned flag on the note with this id; pinning it again unpins it."""
+        # Look up by stable id, not list position, so a pin click stays correct
+        # even after the list is reordered or a note is deleted. Read pinned with
+        # .get so a note missing the key (created before this feature) defaults
+        # to unpinned.
+        note = next((n for n in app.notes if n.get("id") == note_id), None)
+        if note is None:
             abort(404)
-        note = app.notes[idx]
         note["pinned"] = not note.get("pinned", False)
         return redirect(url_for("home"))
 

@@ -21,11 +21,11 @@ def create_app() -> Flask:
         # Pinned notes float to the top. Sort a view (never mutate app.notes)
         # and carry each note's original index so the pin button targets the
         # right note even after the list is reordered for display.
-        ordered = sorted(
+        notes_pinned_first = sorted(
             enumerate(app.notes),
-            key=lambda item: not item[1].get("pinned", False),
+            key=lambda pair: not pair[1].get("pinned", False),
         )
-        return render_template("home.html", notes=ordered)
+        return render_template("home.html", notes=notes_pinned_first)
 
     @app.route("/notes/new", methods=["GET", "POST"])
     def new_note():
@@ -39,9 +39,9 @@ def create_app() -> Flask:
 
     @app.route("/notes/<int:idx>/pin", methods=["POST"])
     def pin_note(idx: int):
-        # Toggle pinned on the note at this index. Single endpoint: pinning an
-        # already-pinned note unpins it. Read with .get so a note missing the
-        # key (created before this feature) is treated as unpinned.
+        """Toggle the pinned flag on the note at idx; pinning it again unpins it."""
+        # Read with .get so a note missing the key (created before this feature)
+        # is treated as unpinned.
         if idx < 0 or idx >= len(app.notes):
             abort(404)
         note = app.notes[idx]
